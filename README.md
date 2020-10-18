@@ -1,9 +1,13 @@
 # Python Project
 
-## Syncfiles
+## sync_files
 
 此项目旨在提供一种方法解决开发和编译在不同的机器上。通过`git status`命令获取到在开发机器上的改动文件列表，然后通过系统的`scp`命令把改动的文件列表拷贝到编辑机器所在项目对应的文件夹中。从而提高项目的开发效率。
 
-## Wechatmessages
+## wechat_messages
 
 此项目旨在提供一种方法提取微信聊天记录，方便保存
+
+## word_frequences
+
+此项目旨在提供一种方法分析日志文件中选定长度的短语出现的频率
