@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-#coding:utf-8
+# coding:utf-8
 
 import os
 import sys
 import re
-import getopt
 import tarfile
 import argparse
 
@@ -15,7 +14,7 @@ REDUECE_COUNT = 0
 DISPLAY_NUM = 100
 DEFAULT_SUB_WORDS_LEN = 4
 RE_PATTERN = None
-DIGIT_RE_PATTEN = re.compile('\d+')
+DIGIT_RE_PATTEN = re.compile(r'\d+')
 OUTPUT_FILE = ''
 DATA_BUFF = ''
 IGNORE_NUM = False
@@ -30,7 +29,7 @@ def read_part(file_path, size=DATA_MAX_BUFF, encoding=CODING_TYPE):
     return read_normal_file_part(file_path, size, encoding)
 
 
-def read_tar_gz_file_part(file_path, size=DATA_MAX_BUFF, encoding=CODING_TYPE): 
+def read_tar_gz_file_part(file_path, size=DATA_MAX_BUFF, encoding=CODING_TYPE):
     tar = tarfile.open(file_path, 'r:gz')
     total_count = len(tar.getmembers())
     tmp_count = 0
@@ -47,7 +46,7 @@ def read_tar_gz_file_part(file_path, size=DATA_MAX_BUFF, encoding=CODING_TYPE):
                 if part:
                     try:
                         yield part.decode(CODING_TYPE)
-                    except:
+                    except Exception:
                         pass
                 else:
                     break
@@ -106,85 +105,42 @@ def analysis_file(file_name, sub_words_dict):
             misra_gries(sub_words, sub_words_dict)
 
 
-def get_command_params(argv):
-    help_text = '''
-    命令格式: 
-    file_analysis.py -h -i -l <word_length> -t <top_num> -r <regular_expression> -o <output_file> <file_list>
+def get_command_params():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--ignore_number', dest='ignore_number', action='store_true', default=False, help='数学替换成*')
+    parser.add_argument('-l', '--length', dest='match_length', action='store', default=4, type=int, help='日志文件中查询的单词长度')
+    parser.add_argument('-t', '--top', dest='display_num', action='store', default=100, type=int, help='显示多少个结果，出现频率从高到低')
+    parser.add_argument('-r', '--reg', dest='regular_expression', action='store', default='', help='需要分析文件的正则表达式，支持压缩文件包中的文件, 默认值是所有文件')
+    parser.add_argument('-o', '--output', dest='output_file', action='store', default='', help='结果输出文件，默认输出到屏幕')
+    parser.add_argument('-f', '--file', dest='file_list', action='store', nargs='+', help='需要分析的文件列表或者目录')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
+    input_params = parser.parse_args()
 
-    file_analysis.py --help --ignorenumber --length=<word_length> --top=<top_num> --reg=<regular_expression> --output=<output_file> <file_list>
-
-    其中:
-    file_list:          需要分析的日志文件或目录,多个文件或目录以空格分开
-    -l, --length:       日志文件中查询的单词长度，默认值是4
-    -t, --top:          显示多少个结果，出现频率从高到低，默认值是100
-    -r, --reg:          需要分析文件的正则表达式，支持压缩文件包中的文件, 默认值是所有文件
-    -o, --output:       结果输出文件，默认输出到屏幕
-    -h, --help:         显示使用说明
-    -i, --ignorenumber: 数学替换成*
-    '''
-
-    try:
-        """
-        options, args = getopt.getopt(args, shortopts, longopts=[])
-        参数args：一般是sys.argv[1:]。过滤掉sys.argv[0]，它是执行脚本的名字，不算做命令行参数。
-        参数shortopts：短格式分析串。例如："hp:i:"，h后面没有冒号，表示后面不带参数；p和i后面带有冒号，表示后面带参数。
-        参数longopts：长格式分析串列表。例如：["help", "ip=", "port="]，help后面没有等号，表示后面不带参数；ip和port后面带冒号，表示后面带参数。
-
-        返回值options是以元组为元素的列表，每个元组的形式为：(选项串, 附加参数)，如：('-i', '192.168.0.1')
-        返回值args是个列表，其中的元素是那些不含'-'或'--'的参数。
-        """
-        opts, args = getopt.getopt(argv, "hil:t:r:o:", ["help", "length=", "top=", "reg=", "output="])
-    except getopt.GetoptError:
-        print(help_text)
-        sys.exit(2)
-
-    output_file = ''
-    regular_expression = ''
-    display_num = ''
-    sub_words_len = ''
     global IGNORE_NUM
-    # 处理 返回值options是以元组为元素的列表。
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            print(help_text)
-            sys.exit()
-        elif opt in ('-i', '--ignorenumber'):
-            IGNORE_NUM = True
-        elif opt in ('-l', '--length'):
-            sub_words_len = arg
-        elif opt in ('-t', '--top'):
-            display_num = arg
-        elif opt in ('-r', '--reg'):
-            regular_expression = arg
-        elif opt in ('-o', '--output'):
-            output_file = arg
+    IGNORE_NUM = input_params.ignore_number
 
-    if not check_regular_expression(regular_expression):
-        print(help_text)
+    if not check_regular_expression(input_params.regular_expression):
         sys.exit(1)
 
-    if not check_display_num(display_num):
-        print(help_text)
+    if not check_display_num(input_params.display_num):
         sys.exit(2)
-    
-    if not check_sub_words_len(sub_words_len):
-        print(help_text)
+
+    if not check_match_length(input_params.match_length):
         sys.exit(3)
 
-    if not check_output_file(output_file):
-        print(help_text)
+    if not check_output_file(input_params.output_file):
         sys.exit(4)
 
-    valid_file_list = get_input_file_list(args)
+    print(input_params.file_list)
+    valid_file_list = get_input_file_list(input_params.file_list)
     if not valid_file_list:
-        print(help_text)
         sys.exit(5)
 
     return valid_file_list
 
 
 def get_input_file_list(file_list):
-    if len(file_list) == 0:
+    if not file_list:
         print('请输入要分析的文件或目录')
         return None
 
@@ -229,28 +185,20 @@ def check_regular_expression(regular_expression):
 
 
 def check_display_num(display_num):
-    if len(display_num) == 0:
-        return True
-    
-    if not display_num.isdigit():
-        print('输入的显示多少个结果不是整数:', display_num)
+    if display_num < 0:
         return False
 
     global DISPLAY_NUM
-    DISPLAY_NUM = int(display_num)
+    DISPLAY_NUM = display_num
     return True
 
 
-def check_sub_words_len(sub_words_len):
-    if len(sub_words_len) == 0:
-        return True
-
-    if not sub_words_len.isdigit():
-        print('查询的单词长度不是整数:', sub_words_len)
+def check_match_length(match_length):
+    if match_length < 0:
         return False
 
     global DEFAULT_SUB_WORDS_LEN
-    DEFAULT_SUB_WORDS_LEN = int(sub_words_len)
+    DEFAULT_SUB_WORDS_LEN = match_length
 
     return True
 
@@ -316,7 +264,7 @@ def display_result(result):
     if len(result) == 0:
         print('分析出错，退出')
         return
-    
+
     global OUTPUT_FILE
     global TOTAL_LINES
     global TOTAL_SIZE
@@ -324,7 +272,7 @@ def display_result(result):
         if os.path.isdir(OUTPUT_FILE):
             OUTPUT_FILE = os.path.join(os.path.abspath(OUTPUT_FILE), 'result.log')
         file = open(OUTPUT_FILE, 'w', encoding='utf-8')
-    
+
     total_line_str = "总行数:{0}".format(TOTAL_LINES)
     total_size_str = "总字节数:{0}".format(TOTAL_SIZE)
 
@@ -333,7 +281,7 @@ def display_result(result):
     if len(OUTPUT_FILE) > 0:
         file.write(total_line_str + '\n')
         file.write(total_size_str + '\n')
-    
+
     count = 1
     for item in result[:DISPLAY_NUM]:
         item_frequency = item[1] + REDUECE_COUNT
@@ -357,7 +305,7 @@ def get_sub_words_len():
 
 
 def main():
-    file_list = get_command_params(sys.argv[1:])
+    file_list = get_command_params()
     result = analysis_files(file_list)
     display_result(result)
 
