@@ -3,8 +3,9 @@
 
 from datetime import datetime, timedelta
 from pytz import timezone
-
 import time
+import qrcode
+import zxing
 
 
 def unix_time(dt):
@@ -64,5 +65,21 @@ def get_begin_end_time_by_duration(duration, guard_time=None, tz=None, forward=T
     return begin_time, end_time
 
 
+def generate_qrcode(url: str):
+    image = qrcode.make(data=url)
+    return image
+
+
+def decode_qrcode_image(image_file):
+    reader = zxing.BarCodeReader()
+    barcode = reader.decode(img)
+    return barcode.parsed
+
+
 if __name__ == "__main__":
     print(unix_time("2020-02-24 01:01:01"))
+    img = generate_qrcode("https://www.baidu.com")
+    # img.show()
+    img.save("baidu.jpg")
+    url = decode_qrcode_image('baidu.jpg')
+    print(url)

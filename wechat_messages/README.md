@@ -56,5 +56,5 @@
 + 导出微信消息记录
   使用`dump-msg.py`脚本获取到数据库中信息，并按照用户名或者群名生成文本文件。这个脚本只能导出文件消息，不支持语音、视频、图片、链接和下载文件的导出。
   ```
-  ./dump-msg.py decrypted.db <output-dir>
+  ./dump-msg.py --d decrypted.db -o <output-dir>
   ```

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+'''
+此项目旨在提供一种方法解决开发和编译在不同的机器上。通过`git status`命令获取到在开发机器上的改动文件列表，
+然后通过系统的`scp`命令把改动的文件列表拷贝到编辑机器所在项目对应的文件夹中。从而提高项目的开发效率。
+'''
 import os
 import subprocess
 import argparse
@@ -13,13 +17,11 @@ REMOTE_IP = '127.0.0.2'
 REMOTE_USER_NAME = 'root'
 REMOTE_USER_PASSWORD = 'pass'
 REMOTE_WORKSPACE_PATH_BASE = '/spare/workspace'
-
-IGNORE_FILE_LIST = [
-]
+IGNORE_FILE_LIST = []
 
 
-# 通过git status 命令获取项目中改动的文件列表
-def get_changed_file_list(check_dir):
+def get_changed_file_list(check_dir: str) -> list:
+    '''通过git status 命令获取项目中改动的文件列表'''
     local_project_path = LOCAL_Project_PATH_BASE + os.sep + check_dir
     stdoutput = subprocess.check_output('cd %s && git status -suno' % local_project_path, shell=True)
     decoded_data = stdoutput.decode('UTF-8')
@@ -36,10 +38,12 @@ def get_changed_file_list(check_dir):
     return changed_file_list
 
 
-# 这种方式使用subprocess的方式同步文件列表
-# 好处是在同步的过程中不会暴露用户名和密码，同时在windows和linux平台下都可以使用
-# 前提条件是需要把在本地服务器生成id_rsa.pub并拷贝到远端服务器
-def scp_copy_files(file_list, check_dir):
+def scp_copy_files(file_list: list, check_dir: str) -> None:
+    '''
+    这种方式使用subprocess的方式同步文件列表
+    好处是在同步的过程中不会暴露用户名和密码，同时在windows和linux平台下都可以使用
+    前提条件是需要把在本地服务器生成id_rsa.pub并拷贝到远端服务器
+    '''
     local_project_path = LOCAL_Project_PATH_BASE + os.sep + check_dir
     remote_project_path = REMOTE_WORKSPACE_PATH_BASE + '/' + check_dir
     for file in file_list:
@@ -50,9 +54,11 @@ def scp_copy_files(file_list, check_dir):
         p.wait()
 
 
-# 这种方式借助于pscp.exe第三方软件同步文件列表，只能在windows平台使用
-# 在同步的过程中能看到明文用户名和密码
-def pscp_copy_files(file_list, check_dir):
+def pscp_copy_files(file_list: list, check_dir: str) -> None:
+    '''
+    这种方式借助于pscp.exe第三方软件同步文件列表，只能在windows平台使用
+    在同步的过程中能看到明文用户名和密码
+    '''
     local_project_path = LOCAL_Project_PATH_BASE + os.sep + check_dir
     remote_project_path = REMOTE_WORKSPACE_PATH_BASE + '/' + check_dir
     for file in file_list:
@@ -62,10 +68,12 @@ def pscp_copy_files(file_list, check_dir):
         subprocess.check_output(['powershell', '-command', './pscp.exe', '-pw ' + REMOTE_USER_PASSWORD, local_file_path,  remote_file_path])
 
 
-# 这种方式先使用paramiko进行ssh链接，然后使用scp同步文件列表
-# 好处是在同步的过程中不会暴露用户名和密码，同时在windows和linux平台下都可以使用
-# 前提条件是需要把远端服务器的地址存储到本地的~/.ssh/known_hosts 文件中， 也就是第一次使用之前要成功手工执行一下scp的命令并存储远端服务器的地址
-def ssh_scp_files(file_list, check_dir):
+def ssh_scp_files(file_list: list, check_dir: str) -> None:
+    '''
+    这种方式先使用paramiko进行ssh链接，然后使用scp同步文件列表
+    好处是在同步的过程中不会暴露用户名和密码，同时在windows和linux平台下都可以使用
+    前提条件是需要把远端服务器的地址存储到本地的~/.ssh/known_hosts 文件中， 也就是第一次使用之前要成功手工执行一下scp的命令并存储远端服务器的地址
+    '''
     # ssh_host, ssh_user, ssh_password, ssh_port, source_volume, destination_volume):
     local_project_path = LOCAL_Project_PATH_BASE + os.sep + check_dir
     remote_project_path = REMOTE_WORKSPACE_PATH_BASE + '/' + check_dir
@@ -83,9 +91,11 @@ def ssh_scp_files(file_list, check_dir):
             scp.put(local_file_path, recursive=True, remote_path=remote_file_path)
 
 
-# 这种方式使用pexpect同步文件列表, 只能在linux平台使用
-# 在同步的过程中能看到明文用户名和密码
-def pexpect_copy_files(file_list, check_dir, timeout=30):
+def pexpect_copy_files(file_list: list, check_dir: str, timeout: int = 30) -> None:
+    '''
+    这种方式使用pexpect同步文件列表, 只能在linux平台使用
+    在同步的过程中能看到明文用户名和密码
+    '''
     local_project_path = LOCAL_Project_PATH_BASE + os.sep + check_dir
     remote_project_path = REMOTE_WORKSPACE_PATH_BASE + '/' + check_dir
     for file in file_list:
@@ -101,6 +111,7 @@ def pexpect_copy_files(file_list, check_dir, timeout=30):
 
 
 def get_input_arguments():
+    '''对命令行输入参数的定义和解析'''
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dir', dest='dir', action='store', default='python', help='check directory')
     parser.add_argument('-q', '--quiet', dest='quiet', action='store_true', help='quiet, dont show interaction')
@@ -108,7 +119,7 @@ def get_input_arguments():
     return parser.parse_args()
 
 
-def get_confirm():
+def get_confirm() -> bool:
     result = input('确定[Y/N]:')
     if result.lower() == 'y':
         return True
