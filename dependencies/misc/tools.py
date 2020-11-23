@@ -7,6 +7,10 @@ import time
 import qrcode
 import zxing
 
+'''
+dependences: pytz, qrcode, zxing
+'''
+
 
 def unix_time(dt):
     # 转换成时间数组
@@ -66,13 +70,15 @@ def get_begin_end_time_by_duration(duration, guard_time=None, tz=None, forward=T
 
 
 def generate_qrcode(url: str):
+    '''通过一个URL 生成一个二维码的图片'''
     image = qrcode.make(data=url)
     return image
 
 
 def decode_qrcode_image(image_file):
+    '''通过一个二维码图片提取对应的URL'''
     reader = zxing.BarCodeReader()
-    barcode = reader.decode(img)
+    barcode = reader.decode(image_file)
     return barcode.parsed
 
 

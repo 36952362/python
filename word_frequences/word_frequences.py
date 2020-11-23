@@ -20,6 +20,7 @@ DATA_BUFF = ''
 IGNORE_NUM = False
 TOTAL_LINES = 0
 TOTAL_SIZE = 0
+FILE_LIST = ''
 
 
 def read_part(file_path, size=DATA_MAX_BUFF, encoding=CODING_TYPE):
@@ -136,10 +137,12 @@ def get_command_params():
     if not valid_file_list:
         sys.exit(5)
 
-    return valid_file_list
+    global FILE_LIST
+    FILE_LIST = valid_file_list
 
 
-def get_input_file_list(file_list):
+def get_input_file_list(file_list: str) -> list:
+    '''需要分析的文件列表或者目录'''
     if not file_list:
         print('请输入要分析的文件或目录')
         return None
@@ -161,7 +164,8 @@ def get_input_file_list(file_list):
     return valid_file_list
 
 
-def check_output_file(output_file):
+def check_output_file(output_file: str) -> bool:
+    '''检查输出目录'''
     global OUTPUT_FILE
     if len(output_file) > 0 and not os.path.exists(output_file):
         dir_name = os.path.dirname(os.path.abspath(output_file))
@@ -172,7 +176,8 @@ def check_output_file(output_file):
     return True
 
 
-def check_regular_expression(regular_expression):
+def check_regular_expression(regular_expression: str) -> bool:
+    '''获取文件名的正则表达式'''
     if len(regular_expression) == 0:
         regular_expression = r'.*'
     global RE_PATTERN
@@ -184,7 +189,8 @@ def check_regular_expression(regular_expression):
     return True
 
 
-def check_display_num(display_num):
+def check_display_num(display_num: int) -> bool:
+    '''显示多少个结果，出现频率从高到低'''
     if display_num < 0:
         return False
 
@@ -193,7 +199,8 @@ def check_display_num(display_num):
     return True
 
 
-def check_match_length(match_length):
+def check_match_length(match_length: int) -> bool:
+    '''日志文件中查询的单词长度'''
     if match_length < 0:
         return False
 
@@ -204,7 +211,7 @@ def check_match_length(match_length):
 
 
 def get_file_path():
-    '获取需要分析的文件或目录'
+    '''获取需要分析的文件或目录'''
     file_path = None
     if len(sys.argv) > 1:
         file_path = sys.argv[1]

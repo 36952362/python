@@ -2,14 +2,18 @@
 # coding: utf-8
 
 from yaml import load, dump, FullLoader
-import logging
+
+'''
+dependencies: PyYAML
+'''
 
 
 class YamlFileHelper(object):
-    def __init__(self, file_name=None):
+    '''读取yaml文件中指定的章节'''
+
+    def __init__(self, file_name: str = None) -> None:
         self.file_name = file_name
         self.file_content = self._read()
-        logging.info('file_name:{0}'.format(self.file_name))
 
     def _read(self):
         with open(self.file_name, encoding='utf-8') as f:
@@ -18,18 +22,15 @@ class YamlFileHelper(object):
     def __str__(self):
         return dump(self.file_content)
 
-    def get_data(self, top_section, second_section=None):
+    def get_data(self, top_section: str, second_section: str = None) -> str:
+        '''通过指定的章节获取其中内容'''
         data = self.file_content.get(top_section)
-
         if second_section and data:
             data = data.get(second_section)
         return data
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='../logs/yamlfilehelper.log', format='[%(asctime)s]%(levelname)s:%(message)s', filemode='w', level=logging.DEBUG)
-    yaml_helper = YamlFileHelper('../config/query_config.yaml')
-    # data = yaml_helper.get_data('givr', 'call_flow')
-    yaml_helper.get_keys()
-    # logging.info(data)
-    # print(data)
+    yaml_helper = YamlFileHelper('./query_config.yaml')
+    data = yaml_helper.get_data('givr', 'call_flow')
+    print(data)
